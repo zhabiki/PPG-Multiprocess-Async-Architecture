@@ -20,7 +20,7 @@ if __name__ == "__main__":
     num_port = 8000 # Задаём порт сервера sub_fast_API
 
     processes = {
-        "fast_API": start_process(sub_fast_API.fast_API_run, "FastAPI", (input_queue, host_addres, num_port)),
+        "fast_API": start_process(sub_fast_API.fast_API_run, "FastAPI", (input_queue, predicted_queue, host_addres, num_port)),
         "preprocessor": start_process(sub_preprocessor.preprocessor_run, "Preprocessor", (input_queue, processed_queue)),
         "inference": start_process(sub_inference.inference_run, "Inference", (processed_queue, predicted_queue))
     }
