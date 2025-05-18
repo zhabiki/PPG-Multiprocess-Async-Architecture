@@ -1,34 +1,52 @@
 from setproctitle import setproctitle # type: ignore
 import time
-from dataproc import preprocess
+import numpy as np
 
+from lib.dataproc.preprocess import PreprocessPPG
 
 
 def preprocessor_run(input_queue, processed_queue):
     setproctitle("main_deamon_sub_preprocessor")
-    print("main_deamon_sub_preprocessor -> процесс запущен")
+    print("main_deamon_sub_preprocessor -> ПРОЦЕСС ЗАПУЩЕН")
 
-    # visual = ['find_heartcycle_dists']
-
-    # preprocess_handle = preprocess.PreprocessPPG(vis=visual)
+    preprocess = PreprocessPPG(vis=[
+        # 'peaks',
+        # 'hrv',
+        # 'outliers',
+        # 'seg',
+    ])
 
     while True:
         if not input_queue.empty():
-            raw_data = input_queue.get()  # Считываем данные из очереди
-            print("main_deamon_sub_preprocessor -> получены данные из входящей очереди и направлены на обработку...")
+            req = input_queue.get()
+            print("main_deamon_sub_preprocessor -> Получены данные из input_queue.")
+            # print(type(req.data)) # list
 
+            # Чтобы в случае исключения или ошибки, программа не пошла по пятой точке
+            try:
+                data_np = np.asarray(req.data)
+                data_fs = int(req.fs)
+                data_wsize = 100
+                data_wstride = 10
+                data_method = 'noisy'
+                data_mode = 'cycles'
 
-            try: # чтобы в случае исключения или ошибки, программа не пошла по пятой точке
-                print(type(raw_data))
-                print("main_deamon_sub_preprocessor -> Обработка завершена!")
+                res = preprocess.process_data(
+                    data_np[data_fs : len(data_np) - data_fs],
+                    data_fs,
+                    data_wsize, 
+                    data_wstride,
+                    data_method,
+                    data_mode
+                )
+                print(f'main_deamon_sub_preprocessor -> Обработка завершена ({res.shape})!')
 
-                # if processed_queue is not None:
-                #     processed_queue.put(processed_data)
-                #     print("Результат отправлен в выходную очередь.")
+                if processed_queue is not None:
+                    processed_queue.put(res)
+                    print("main_deamon_sub_preprocessor -> Данные переданы в processed_queue.")
+
             except Exception as e:
-                print("Ошибка при обработке данных:", e)
+                print("main_deamon_sub_preprocessor -> Ошибка при обработке данных:", e)
 
         else:
-            time.sleep(0.1)  # Небольшая задержка во избежание перегрузки CPU
-    # time.sleep(12)
-    # print("Procces_Preprocessor_complete!")
+            time.sleep(1) # Небольшая задержка во избежание перегрузки CPU
