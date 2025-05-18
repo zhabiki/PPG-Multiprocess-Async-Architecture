@@ -12,16 +12,12 @@ def inference_run(processed_queue, predicted_queue):
 
     path_curr = Path(__file__).parent.resolve()
     path_models = path_curr.parent / 'lib' / 'models' / 'saves'
-    # # print(path_models)
+    # print(path_models)
 
-    disorders = ['anxiety','bpad','depression','none']
-    ensemble = Inference([str(path_models) + '/' + name + '_model.json' for name in disorders], disorders)
-
-    # for name in disorders:
-    #     model = Inference(
-    #         str(path_models) + '/' + name + '.joblib'
-    #     )
-    #     models[name] = model
+    disorders = ['anxiety', 'bpad', 'depression', 'none']
+    ensemble = Inference(
+        [str(path_models / f'{name}_model.json') for name in disorders],
+    disorders)
 
     while True:
         if not processed_queue.empty():
@@ -33,36 +29,18 @@ def inference_run(processed_queue, predicted_queue):
                 params_all = req[
                     ['bpm', 'sdnn', 'lf/hf']
                 ]
-                print(req)
 
-                print("main_deamon_sub_inference -> Инференс...")
-                # time.sleep(3) # эмуляция работы модели
-                # res = [0.5, 0.3, 0.8, 0.7]
-                predictions = ensemble.ensemble.forward(params_all.to_numpy(), probas=True)
+                preds = ensemble.ensemble.forward(params_all.to_numpy(), probas=True)
+                # print(preds)
 
-                # for i in range(params_all.shape[0]):
-                #     params_row = (params_all.iloc[i]).to_numpy()
-                #     # print(params_row)
-
-                #     for name in disorders:
-                #         try:
-                #             if predictions.get(name):
-                #                 predictions[name].append(models[name].predict(params_row))
-                #             else:
-                #                 predictions[name] = [models[name].predict(params_row)]
-                #         except Exception:
-                #             if predictions.get(name):
-                #                 predictions[name].append(0.404)
-                #             else:
-                #                 predictions[name] = [0.404]
-
-                # res = dict()
-                # res = { k: float(np.median(v)) for k, v in predictions.items() }
-
+                preds_mean = {
+                    d: float(np.median([e[d][1] for e in preds]))
+                    for d in disorders
+                }
                 print(f'main_deamon_sub_inference -> Итоговые вероятности найдены!')
 
                 if predicted_queue is not None:
-                    predicted_queue.put(predictions)
+                    predicted_queue.put(preds_mean)
                     print("main_deamon_sub_inference -> Данные переданы в predicted_queue.")
 
             except Exception as e:
