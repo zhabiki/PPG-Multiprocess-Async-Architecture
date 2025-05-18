@@ -15,7 +15,7 @@ def inference_run(processed_queue, predicted_queue):
     # # print(path_models)
 
     disorders = ['anxiety','bpad','depression','none']
-    ensemble = Inference(disorders, [str(path_models) + '/' + name + '_model.json' for name in disorders])
+    ensemble = Inference([str(path_models) + '/' + name + '_model.json' for name in disorders], disorders)
 
     # for name in disorders:
     #     model = Inference(
