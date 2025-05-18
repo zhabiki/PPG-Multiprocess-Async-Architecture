@@ -10,12 +10,12 @@ def inference_run(processed_queue, predicted_queue):
     setproctitle("main_deamon_sub_inference")
     print("main_deamon_sub_inference -> ПРОЦЕСС ЗАПУЩЕН")
 
-    # path_curr = Path(__file__).parent.resolve()
-    # path_models = path_curr.parent / 'lib' / 'models' / 'saves'
+    path_curr = Path(__file__).parent.resolve()
+    path_models = path_curr.parent / 'lib' / 'models' / 'saves'
     # # print(path_models)
 
-    # disorders = ['checkpoint']
-    # models = dict()
+    disorders = ['anxiety','bpad','depression','none']
+    ensemble = Inference(disorders, [str(path_models) + '/' + name + '_model.json' for name in disorders])
 
     # for name in disorders:
     #     model = Inference(
@@ -30,15 +30,15 @@ def inference_run(processed_queue, predicted_queue):
 
             # Чтобы в случае исключения или ошибки, программа не пошла по пятой точке
             try:
-                # params_all = req[
-                #     ['bpm', 'sdnn', 'lf/hf']
-                # ]
+                params_all = req[
+                    ['bpm', 'sdnn', 'lf/hf']
+                ]
                 print(req)
 
                 print("main_deamon_sub_inference -> Инференс...")
-                time.sleep(3) # эмуляция работы модели
-                res = [0.5, 0.3, 0.8, 0.7]
-                # predictions = dict()
+                # time.sleep(3) # эмуляция работы модели
+                # res = [0.5, 0.3, 0.8, 0.7]
+                predictions = ensemble.ensemble.forward(params_all.to_numpy(), probas=True)
 
                 # for i in range(params_all.shape[0]):
                 #     params_row = (params_all.iloc[i]).to_numpy()
@@ -62,7 +62,7 @@ def inference_run(processed_queue, predicted_queue):
                 print(f'main_deamon_sub_inference -> Итоговые вероятности найдены!')
 
                 if predicted_queue is not None:
-                    predicted_queue.put(res)
+                    predicted_queue.put(predictions)
                     print("main_deamon_sub_inference -> Данные переданы в predicted_queue.")
 
             except Exception as e:
