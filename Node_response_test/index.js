@@ -26,6 +26,5 @@ fs.createReadStream(csvFilePath)
       console.log('Ответ от FastAPI:', response.data);
     } catch (error) {
       console.error('Ошибка при POST-запросе: ', error.message);
-      console.log(' --  ТАК ЧТО ХУЙ ТЕБЕ!!!')
     }
   });
