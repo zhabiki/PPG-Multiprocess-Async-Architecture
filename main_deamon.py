@@ -1,6 +1,6 @@
 import time
 
-from sub_exec_py import sub_fast_API, sub_preprocessor, sub_inference
+from sub_exec_py import sub_fastAPI, sub_preprocessor, sub_inference
 from multiprocessing import Process, Queue
 
 
@@ -16,11 +16,11 @@ if __name__ == "__main__":
     processed_queue = Queue()
     predicted_queue = Queue()
 
-    host_addres = "0.0.0.0" # Задаём IP адресс сервера sub_fast_API
-    num_port = 8000 # Задаём порт сервера sub_fast_API
+    host_address = "0.0.0.0" # Задаём IP адресс сервера sub_fastAPI
+    num_port = 8000 # Задаём порт сервера sub_fastAPI
 
     processes = {
-        "fast_API": start_process(sub_fast_API.fast_API_run, "FastAPI", (input_queue, predicted_queue, host_addres, num_port)),
+        "fastAPI": start_process(sub_fastAPI.fastAPI_run, "FastAPI", (input_queue, predicted_queue, host_address, num_port)),
         "preprocessor": start_process(sub_preprocessor.preprocessor_run, "Preprocessor", (input_queue, processed_queue)),
         "inference": start_process(sub_inference.inference_run, "Inference", (processed_queue, predicted_queue))
     }
@@ -31,8 +31,8 @@ if __name__ == "__main__":
                 if not process.is_alive():
                     print(f"main_deamon -> Подпроцесс '{name}' упал!!! Перезапускаю...")
                     # Перезапускаем упавшие подпроцессы
-                    if name == "fast_API":
-                        processes[name] = start_process(sub_fast_API.fast_API_run, "FastAPI", (input_queue,))
+                    if name == "fastAPI":
+                        processes[name] = start_process(sub_fastAPI.fastAPI_run, "FastAPI", (input_queue, predicted_queue, host_address, num_port)),
                     elif name == "preprocessor":
                         processes[name] = start_process(sub_preprocessor.preprocessor_run, "Preprocessor", (input_queue, processed_queue))
                     elif name == "inference":
